@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Jukebox Snack and Learn Activity</title>
+  <style>
+    body {
+      font-family: "Trebuchet MS", sans-serif;
+      background: url('parchment-bg.jpg') no-repeat center center fixed;
+      background-size: cover;
+      margin: 0; padding: 20px;
+      color: #2b1d0e;
+    }
+    h1 { text-align: center; font-family: "Cinzel", serif; }
+    .intro {
+      max-width: 700px;
+      margin: 0 auto 20px;
+      padding: 15px;
+      background: rgba(255,255,255,0.8);
+      border-radius: 8px;
+      font-size: 1.1em;
+      text-align: center;
+    }
+    .question-block {
+      margin: 20px 0;
+      padding: 15px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    label { font-weight: bold; }
+    select, input[type="text"] { margin-top: 8px; width: 100%; padding: 6px; }
+    .progress {
+      text-align: center;
+      margin: 15px 0;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    button {
+      display: block;
+      margin: 20px auto;
+      padding: 12px 24px;
+      font-size: 1.1em;
+      cursor: pointer;
+      background: #5c3d2e;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.4);
+      transition: transform 0.2s;
+    }
+    button:hover { transform: scale(1.05); }
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      background: #e0ffe0;
+      border-radius: 8px;
+      font-size: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Choose the answer that best describes you</h1>
+  <div class="intro">
+    Enter your name, then answer 40 statements. Rate each from 
+    <strong>1 (Strongly Disagree)</strong> to <strong>5 (Strongly Agree)</strong>. 
+    Your answers will reveal your hidden guild crest.
+  </div>
+
+  <!-- Name field -->
+  <div class="question-block">
+    <label for="playerName">Your Name (or Guild Name):</label><br>
+    <input type="text" id="playerName" name="playerName" placeholder="Enter your name here">
+  </div>
+
+  <div class="progress" id="progress">Question 0 of 40</div>
+  <form id="quizForm"></form>
+  <button type="button" onclick="calculateResults()">Reveal Your Crest</button>
+  <div id="result" class="result" style="display:none;"></div>
+
+<script>
+const birds = {
+  Dove:   {title: "Healer of Harmony", crest: "🕊️"},
+  Owl:    {title: "Strategist of Wisdom", crest: "🦉"},
+  Peacock:{title: "Herald of Inspiration", crest: "🦚"},
+  Eagle:  {title: "Champion of Results", crest: "🦅"}
+};
+
+const questions = {
+  Dove: [
+    "I prioritize keeping peace in group discussions.",
+    "I often mediate when conflicts arise.",
+    "I value consensus over competition.",
+    "I avoid confrontation whenever possible.",
+    "I am sensitive to others’ feelings.",
+    "I prefer collaboration over competition.",
+    "I often put others’ needs before my own.",
+    "I dislike tension and seek resolution quickly.",
+    "I encourage others to feel included.",
+    "I believe kindness is more important than winning."
+  ],
+  Owl: [
+    "I prefer decisions backed by data.",
+    "I double-check details before acting.",
+    "I enjoy analyzing problems thoroughly.",
+    "I am cautious and deliberate in communication.",
+    "I value accuracy over speed.",
+    "I like to plan ahead and anticipate risks.",
+    "I often ask clarifying questions before agreeing.",
+    "I prefer structure and clear rules.",
+    "I am skeptical of vague or emotional arguments.",
+    "I enjoy learning and applying new knowledge."
+  ],
+  Peacock: [
+    "I thrive in presentations and group discussions.",
+    "I enjoy motivating others with energy and stories.",
+    "I often use humor or flair when speaking.",
+    "I like being the center of attention.",
+    "I am energized by social interaction.",
+    "I enjoy brainstorming and creative sessions.",
+    "I often encourage others with enthusiasm.",
+    "I use expressive gestures when I talk.",
+    "I enjoy recognition and praise.",
+    "I believe communication should be lively and engaging."
+  ],
+  Eagle: [
+    "I value quick, decisive action.",
+    "I take charge when direction is unclear.",
+    "I focus on achieving goals above all else.",
+    "I am comfortable being direct, even blunt.",
+    "I enjoy competition and challenges.",
+    "I prefer efficiency over lengthy discussion.",
+    "I am confident in making tough decisions.",
+    "I push myself and others to succeed.",
+    "I believe results matter more than process.",
+    "I thrive under pressure and deadlines."
+  ]
+};
+
+// Flatten and randomize questions
+let allQuestions = [];
+for (const bird in questions) {
+  questions[bird].forEach((q,i)=> allQuestions.push({bird, text:q, idx:i}));
+}
+allQuestions = allQuestions.sort(()=> Math.random()-0.5);
+
+const form = document.getElementById("quizForm");
+allQuestions.forEach((qObj, i) => {
+  const block = document.createElement("div");
+  block.className = "question-block";
+  const label = document.createElement("label");
+  label.textContent = qObj.text;
+  const select = document.createElement("select");
+  select.name = qObj.bird + "_" + qObj.idx;
+
+  // Add placeholder option
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Select your answer...";
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  select.appendChild(placeholder);
+
+  ["1 - Strongly Disagree","2 - Disagree","3 - Neutral","4 - Agree","5 - Strongly Agree"]
+    .forEach((txt, val) => {
+      const opt = document.createElement("option");
+      opt.value = val+1;
+      opt.textContent = txt;
+      select.appendChild(opt);
+    });
+
+  select.addEventListener("change", ()=> updateProgress());
+  block.appendChild(label);
+  block.appendChild(document.createElement("br"));
+  block.appendChild(select);
+  form.appendChild(block);
+});
+
+function updateProgress(){
+  const answered = Array.from(form.elements)
+    .filter(el => el.tagName === "SELECT" && el.value !== "").length;
+  document.getElementById("progress").textContent = `Question ${answered} of ${allQuestions.length}`;
+}
+
+function calculateResults(){
+  const totalQuestions = allQuestions.length;
+  const answered = Array.from(form.elements)
+    .filter(el => el.tagName === "SELECT" && el.value !== "").length;
+  if (answered < totalQuestions) {
+    alert(`Please answer all ${totalQuestions} questions before revealing your crest.`);
+    return;
+  }
+
+  const scores={Dove:0,Owl:0,Peacock:0,Eagle:0};
+  const inputs=form.elements;
+  for(let i=0;i<inputs.length;i++){
+    if(inputs[i].tagName === "SELECT" && inputs[i].value !== ""){
+      const [bird]=inputs[i].name.split("_");
+      scores[bird]+=parseInt(inputs[i].value);
+    }
+  }
+  const percents={};
+  for(const b in scores){ percents[b]=Math.round((scores[b]/50)*100); }
+  const max=Math.max(...Object.values(scores));
+  const dominant=Object.keys(scores).filter(b=>scores[b]===max);
+
+  const playerName = document.getElementById("playerName").value || "Adventurer";
+
+  localStorage.setItem("birdResults",JSON.stringify({scores,percents,dominant,playerName}));
+  window.location.href="results.html";
+}
+</script>
+</body>
+</html>

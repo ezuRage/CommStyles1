@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Summon</title>
+  <style>
+    body {
+      font-family: "Cinzel", serif;
+      background: url('MagicCircle2.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #f5f5f5;
+      text-align: center;
+      padding: 40px;
+    }
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      color: #fff;
+      text-shadow: 0 0 12px rgba(0,0,0,0.8);
+    }
+    .badge {
+      margin: 20px auto;
+      width: 260px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.4);
+    }
+    .title-block {
+      max-width: 700px;
+      margin: 0 auto;
+      background: rgba(0,0,0,0.6);
+      padding: 20px;
+      border-radius: 12px;
+      font-size: 1.3em;
+      line-height: 1.6em;
+      box-shadow: 0 0 10px rgba(255,255,255,0.2);
+    }
+    .scoreboard {
+      margin-top: 30px;
+      font-size: 1.2em;
+      background: rgba(0,0,0,0.6);
+      padding: 20px;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 0 0 10px rgba(255,255,255,0.2);
+    }
+    .crest-line {
+      margin: 8px 0;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>✨ Your Guardian Force ✨</h1>
+  <div id="badge"></div>
+  <div id="titleBlock" class="title-block"></div>
+  <div id="scoreboard" class="scoreboard"></div>
+
+<script>
+const summons = {
+  Dove: {
+    name: "Carbuncle",
+    title: "Healer of Harmony",
+    crest: "✨",
+    badge: "carbuncle.jpg",
+    lore: "Carbuncle appears as a gentle fox‑like spirit crowned with a glowing jewel. It embodies empathy and protection, casting barriers that reflect harm away from allies. Those who summon Carbuncle are recognized as peacemakers, weaving harmony into every quest."
+  },
+  Owl: {
+    name: "Alexander",
+    title: "Strategist of Wisdom",
+    crest: "⚙️",
+    badge: "alexander.jpg",
+    lore: "Alexander manifests as a colossal mechanical citadel, a living fortress of law and order. Its gears turn with precision, and its light pierces confusion. Summoners of Alexander are guardians of structure, clarity, and reason, ensuring the guild’s path is steady and just."
+  },
+  Peacock: {
+    name: "Phoenix",
+    title: "Herald of Inspiration",
+    crest: "🔥",
+    badge: "phoenix.jpg",
+    lore: "Phoenix rises in a blaze of crimson wings, embodying renewal and inspiration. Its flames do not consume but uplift, igniting courage and creativity in allies. Summoners of Phoenix are charismatic heralds, breathing life into the guild’s spirit and sparking collective energy."
+  },
+  Eagle: {
+    name: "Bahamut",
+    title: "Champion of Results",
+    crest: "🐉",
+    badge: "bahamut.jpg",
+    lore: "Bahamut descends as the king of dragons, wings spanning the horizon, eyes burning with resolve. Its roar shakes the heavens, unleashing decisive power. Summoners of Bahamut are bold leaders, driving the guild toward victory with relentless focus and strength."
+  }
+};
+
+const data = JSON.parse(localStorage.getItem("birdResults"));
+const badgeDiv = document.getElementById("badge");
+const titleBlock = document.getElementById("titleBlock");
+const scoreboardDiv = document.getElementById("scoreboard");
+
+const playerName = data.playerName || "Adventurer";
+
+if (data.dominant.length === 1) {
+  const b = data.dominant[0];
+  const summon = summons[b];
+  badgeDiv.innerHTML = `<img src="${summon.badge}" class="badge" alt="${summon.name} Crest">`;
+  titleBlock.innerHTML = `
+    ${summon.crest} <strong>${playerName}</strong>, you summon <strong>${summon.name}</strong><br>
+    <em>${summon.title}</em><br><br>
+    ${summon.lore}
+  `;
+} else {
+  titleBlock.innerHTML = `
+    Multiple summons detected:<br><br>
+    ${data.dominant.map(b => {
+      const s = summons[b];
+      return `${s.crest} <strong>${s.name}</strong> — ${s.title}<br>${s.lore}`;
+    }).join("<br><br>")}
+  `;
+}
+
+scoreboardDiv.innerHTML = Object.keys(data.percents)
+  .map(b => `<div class="crest-line">${summons[b].crest} ${summons[b].name}: ${data.percents[b]}%</div>`)
+  .join("");
+</script>
+</body>
+</html>
